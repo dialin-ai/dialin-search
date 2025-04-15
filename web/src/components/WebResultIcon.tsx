@@ -3,7 +3,7 @@
 import { ValidSources } from "@/lib/types";
 import { SourceIcon } from "./SourceIcon";
 import { useState } from "react";
-import { OnyxIcon } from "./icons/icons";
+import { DialinIcon } from "./icons/icons";
 
 export function WebResultIcon({
   url,
@@ -22,7 +22,7 @@ export function WebResultIcon({
   return (
     <>
       {hostname.includes("onyx.app") ? (
-        <OnyxIcon size={size} className="dark:text-[#fff] text-[#000]" />
+        <DialinIcon size={size} className="dark:text-[#fff] text-[#000]" />
       ) : !error ? (
         <img
           className="my-0 rounded-full py-0"

@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { SettingsContext } from "../settings/SettingsProvider";
-import { OnyxIcon, OnyxLogoTypeIcon } from "../icons/icons";
+import { DialinIcon, DialinLogoTypeIcon } from "../icons/icons";
 
 export function Logo({
   height,
@@ -34,7 +34,7 @@ export function Logo({
   ) {
     return (
       <div style={{ height, width }} className={className}>
-        <OnyxIcon
+        <DialinIcon
           size={height}
           className={`${className} dark:text-[#fff] text-[#000]`}
         />
@@ -63,7 +63,7 @@ export function LogoType({
   size?: "small" | "default" | "large";
 }) {
   return (
-    <OnyxLogoTypeIcon
+    <DialinLogoTypeIcon
       size={115}
       className={`items-center w-full dark:text-[#fff]`}
     />

@@ -5,7 +5,6 @@ import { CustomTooltip } from "../tooltip/CustomTooltip";
 import { buildImgUrl } from "@/app/chat/files/images/utils";
 import {
   ArtAsistantIcon,
-  OnyxIcon,
   GeneralAssistantIcon,
   SearchAssistantIcon,
 } from "../icons/icons";
