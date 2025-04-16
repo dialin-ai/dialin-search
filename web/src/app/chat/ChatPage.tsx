@@ -235,7 +235,8 @@ export function ChatPage({
   const [viewingFilePicker, setViewingFilePicker] = useState(false);
   const [toggleDocSelection, setToggleDocSelection] = useState(false);
   const [documentSidebarVisible, setDocumentSidebarVisible] = useState(false);
-  const [proSearchEnabled, setProSearchEnabled] = useState(proSearchToggled);
+  const [proSearchEnabled, setProSearchEnabled] = useState(proSearchToggled !== false);
+  
   const toggleProSearch = () => {
     Cookies.set(
       PRO_SEARCH_TOGGLED_COOKIE_NAME,

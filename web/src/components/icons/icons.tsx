@@ -141,8 +141,8 @@ export const LogoTypeIcon = ({
   src
 }: LogoIconProps) => (
   <Image
-    style={{ width: `${size}px`, height: `${size * (394/1028)}px` }}
-    className={`w-[${size}px] h-[${size * (394/1028)}px] ` + className}
+    style={{ width: `${size}px`, height: `${size * (155/518)}px` }}
+    className={`w-[${size}px] h-[${size * (155/518)}px] ` + className}
     src={src}
     alt="Logo"
     width="120"
