@@ -1,11 +1,11 @@
 services:
   api_server:
-    image: onyxdotapp/onyx-backend:${IMAGE_TAG:-latest}
+    image: dialin/dialin-onyx-backend:base
     build:
       context: ../../backend
       dockerfile: Dockerfile
       cache_from:
-        - onyxdotapp/onyx-backend:latest
+        - dialin/dialin-onyx-backend:base
     command: >
       /bin/sh -c "alembic upgrade head &&
       echo \"Starting Onyx Api Server\" &&
@@ -139,12 +139,12 @@ services:
         max-file: "6"
 
   background:
-    image: onyxdotapp/onyx-backend:${IMAGE_TAG:-latest}
+    image: dialin/dialin-onyx-backend:base
     build:
       context: ../../backend
       dockerfile: Dockerfile
       cache_from:
-        - onyxdotapp/onyx-backend:latest
+        - dialin/dialin-onyx-backend:base
     command: >
       /bin/sh -c "
       if [ -f /etc/ssl/certs/custom-ca.crt ]; then
@@ -273,12 +273,12 @@ services:
     #   - ./bundle.pem:/app/bundle.pem:ro
 
   web_server:
-    image: onyxdotapp/onyx-web-server:${IMAGE_TAG:-latest}
+    image: dialin/dialin-onyx-web-server:base
     build:
       context: ../../web
       dockerfile: Dockerfile
       cache_from:
-        - onyxdotapp/onyx-web-server:latest
+        - dialin/dialin-onyx-web-server:base
       args:
         - NEXT_PUBLIC_DISABLE_STREAMING=${NEXT_PUBLIC_DISABLE_STREAMING:-false}
         - NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA=${NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA:-false}
@@ -308,12 +308,12 @@ services:
       - web_server_node_modules:/app/node_modules
 
   inference_model_server:
-    image: onyxdotapp/onyx-model-server:${IMAGE_TAG:-latest}
+    image: dialin/dialin-onyx-model-server:base
     build:
       context: ../../backend
       dockerfile: Dockerfile.model_server
       cache_from:
-        - onyxdotapp/onyx-model-server:latest
+        - dialin/dialin-onyx-model-server:base
     command: >
       /bin/sh -c "if [ \"${DISABLE_MODEL_SERVER:-false}\" = \"True\" ]; then
         echo 'Skipping service...';
@@ -342,12 +342,12 @@ services:
         max-file: "6"
 
   indexing_model_server:
-    image: onyxdotapp/onyx-model-server:${IMAGE_TAG:-latest}
+    image: dialin/dialin-onyx-model-server:base
     build:
       context: ../../backend
       dockerfile: Dockerfile.model_server
       cache_from:
-        - onyxdotapp/onyx-model-server:latest
+        - dialin/dialin-onyx-model-server:base
     command: >
       /bin/sh -c "if [ \"${DISABLE_MODEL_SERVER:-false}\" = \"True\" ]; then
         echo 'Skipping service...';
