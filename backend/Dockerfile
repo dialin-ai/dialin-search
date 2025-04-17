@@ -22,6 +22,8 @@ RUN echo "ONYX_VERSION: ${ONYX_VERSION}"
 # curl included just for users' convenience
 # zip for Vespa step futher down
 # ca-certificates for HTTPS
+# poppler-utils for PDF to image conversion (needed by pdf2image)
+# tesseract-ocr for OCR functionality
 RUN apt-get update && \
     apt-get install -y \
         cmake \
@@ -39,9 +41,32 @@ RUN apt-get update && \
         nano \
         vim && \
     rm -rf /var/lib/apt/lists/* && \
-    apt-get clean
+    apt-get clean 
 
+# Cleanup for CVEs and size reduction
+# https://github.com/tornadoweb/tornado/issues/3107
+# xserver-common and xvfb included by playwright installation but not needed after
+# perl-base is part of the base Python Debian image but not needed for Onyx functionality
+# perl-base could only be removed with --allow-remove-essential
+# RUN apt-get update && \
+#     apt-get remove -y --allow-remove-essential \
+#         perl-base \
+#         xserver-common \
+#         xvfb \
+#         cmake \
+#         libldap-2.5-0 \
+#         libxmlsec1-dev \
+#         pkg-config \
+#         gcc && \
+#     apt-get install -y libxmlsec1-openssl && \
+#     apt-get autoremove -y && \
+#     rm -rf /var/lib/apt/lists/* && \
+#     rm -f /usr/local/lib/python3.11/site-packages/tornado/test/test.key
 
+RUN apt-get update && \
+    apt-get install -y python3-pil tesseract-ocr libtesseract-dev tesseract-ocr-eng tesseract-ocr-script-latn poppler-utils && \
+    which tesseract && tesseract --version && \
+    ln -s $(which tesseract) /usr/bin/tesseract || true
 
 # Install Python dependencies
 # Remove py which is pulled in by retry, py is not needed and is a CVE
@@ -57,26 +82,7 @@ RUN pip install --no-cache-dir --upgrade \
     playwright install-deps chromium && \
     ln -s /usr/local/bin/supervisord /usr/bin/supervisord
 
-# Cleanup for CVEs and size reduction
-# https://github.com/tornadoweb/tornado/issues/3107
-# xserver-common and xvfb included by playwright installation but not needed after
-# perl-base is part of the base Python Debian image but not needed for Onyx functionality
-# perl-base could only be removed with --allow-remove-essential
-RUN apt-get update && \
-    apt-get remove -y --allow-remove-essential \
-        perl-base \
-        xserver-common \
-        xvfb \
-        cmake \
-        libldap-2.5-0 \
-        libxmlsec1-dev \
-        pkg-config \
-        gcc && \
-    apt-get install -y libxmlsec1-openssl && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -f /usr/local/lib/python3.11/site-packages/tornado/test/test.key
-
+RUN python3 -c "import pytesseract; print(pytesseract.get_tesseract_version())"
 
 # Pre-downloading models for setups with limited egress
 RUN python -c "from tokenizers import Tokenizer; \
