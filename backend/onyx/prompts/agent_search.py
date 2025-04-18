@@ -168,7 +168,7 @@ History summary:
 # Sub-question
 # Intentionally left a copy in case we want to modify this one differently
 INITIAL_QUESTION_DECOMPOSITION_PROMPT = f"""
-Please create a list of no more than 3 sub-questions whose answers would help to inform the answer \
+Please create a list of no more than {{max_sub_questions}} sub-questions whose answers would help to inform the answer \
 to the initial question.
 
 The purpose for these sub-questions could be:
@@ -224,13 +224,15 @@ add any explanations or other text!):
 Answer:
 """.strip()
 
+DEFAULT_MAX_SUB_QUESTIONS = 3
+
 # INITIAL PHASE - AWARE OF REFINEMENT
 # Sub-question
 # Suggest augmenting question generation as well, that a future refinement phase could use
 # to generate new questions
 # Intentionally left a copy in case we want to modify this one differently
 INITIAL_QUESTION_DECOMPOSITION_PROMPT_ASSUMING_REFINEMENT = f"""
-Please create a list of no more than 3 sub-questions whose answers would help to inform the answer \
+Please create a list of no more than {{max_sub_questions}} sub-questions whose answers would help to inform the answer \
 to the initial question.
 
 The purpose for these sub-questions could be:
@@ -297,7 +299,7 @@ Answer:
 
 # TODO: combine shared pieces with INITIAL_QUESTION_DECOMPOSITION_PROMPT
 INITIAL_DECOMPOSITION_PROMPT_QUESTIONS_AFTER_SEARCH = f"""
-Please create a list of no more than 3 sub-questions whose answers would help to inform the answer \
+Please create a list of no more than {{max_sub_questions}} sub-questions whose answers would help to inform the answer \
 to the initial question.
 
 The purpose for these sub-questions could be:
@@ -365,7 +367,7 @@ Answer:
 """.strip()
 
 INITIAL_DECOMPOSITION_PROMPT_QUESTIONS_AFTER_SEARCH_ASSUMING_REFINEMENT = f"""
-Please create a list of no more than 3 sub-questions whose answers would help to inform the answer \
+Please create a list of no more than {{max_sub_questions}} sub-questions whose answers would help to inform the answer \
 to the initial question.
 
 The purpose for these sub-questions could be:

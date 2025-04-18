@@ -49,6 +49,7 @@ from onyx.prompts.agent_search import (
 )
 from onyx.prompts.agent_search import (
     INITIAL_QUESTION_DECOMPOSITION_PROMPT_ASSUMING_REFINEMENT,
+    DEFAULT_MAX_SUB_QUESTIONS
 )
 from onyx.utils.logger import setup_logger
 from onyx.utils.threadpool_concurrency import run_with_timeout
@@ -87,6 +88,13 @@ def decompose_orig_question(
     # Use the initial search results to inform the decomposition
     agent_start_time = datetime.now()
 
+    # Get max_sub_questions from graph_config.inputs.search_request.max_sub_questions if it exists
+    max_sub_questions = DEFAULT_MAX_SUB_QUESTIONS
+    if hasattr(graph_config.inputs.search_request, 'max_sub_questions') and graph_config.inputs.search_request.max_sub_questions is not None:
+        max_sub_questions = graph_config.inputs.search_request.max_sub_questions
+
+    logger.info(f"Searching with max sub questions: {max_sub_questions}")
+
     # Initial search to inform decomposition. Just get top 3 fits
 
     if perform_initial_search_decomposition:
@@ -106,13 +114,13 @@ def decompose_orig_question(
         )
 
         decomposition_prompt = INITIAL_DECOMPOSITION_PROMPT_QUESTIONS_AFTER_SEARCH_ASSUMING_REFINEMENT.format(
-            question=question, sample_doc_str=sample_doc_str, history=history
+            max_sub_questions=max_sub_questions, question=question, sample_doc_str=sample_doc_str, history=history
         )
 
     else:
         decomposition_prompt = (
             INITIAL_QUESTION_DECOMPOSITION_PROMPT_ASSUMING_REFINEMENT.format(
-                question=question, history=history
+                max_sub_questions=max_sub_questions, question=question, history=history
             )
         )
 
