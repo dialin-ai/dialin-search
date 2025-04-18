@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
+import Cookies from "js-cookie";
 import { Modal } from "@/components/Modal";
 import { AgenticToggle } from "./AgenticToggle";
 import { SettingsContext } from "@/components/settings/SettingsProvider";
 import { useUser } from "@/components/user/UserProvider";
 import { LLMSelector } from "@/components/llm/LLMSelector";
-import { LlmManager, getDisplayNameForModel } from "@/lib/hooks";
-import { getProviderIcon } from "@/app/admin/configuration/llm/interfaces";
+import { LlmManager } from "@/lib/hooks";
 import { LLMProviderDescriptor } from "@/app/admin/configuration/llm/interfaces";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Settings } from "lucide-react";
 import { IconProps } from "@/components/icons/icons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { structureValue } from "@/lib/llm/utils";
+import { MAX_SUB_QUESTIONS_COOKIE, COOKIE_EXPIRY_DAYS } from "./constants";
 
 // Create a wrapper for the Settings icon that matches the expected interface
 const SettingsIconWrapper = ({ size, className }: IconProps): JSX.Element => {
@@ -44,7 +45,10 @@ export function ChatSettingsModal({
   const { isAdmin } = useUser();
 
   const handleSubQuestionCountChange = (value: string) => {
-    setMaxSubQuestions?.(parseInt(value));
+    const count = parseInt(value);
+    setMaxSubQuestions?.(count);
+    // Save to cookie for persistence
+    Cookies.set(MAX_SUB_QUESTIONS_COOKIE, value, { expires: COOKIE_EXPIRY_DAYS });
   };
   
   const handleLlmSelect = (newLlm: string | null) => {

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Cookies from "js-cookie";
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +11,7 @@ import { SettingsContext } from "@/components/settings/SettingsProvider";
 import { useContext } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { MAX_SUB_QUESTIONS_COOKIE, COOKIE_EXPIRY_DAYS } from "./constants";
 
 interface AgenticToggleProps {
   proSearchEnabled: boolean;
@@ -58,8 +60,24 @@ export function AgenticToggle({
   const { isAdmin } = useUser();
   const settings = useContext(SettingsContext);
   
+  // Load the maxSubQuestions from cookie on mount
+  useEffect(() => {
+    if (isAdmin && setMaxSubQuestions) {
+      const savedCount = Cookies.get(MAX_SUB_QUESTIONS_COOKIE);
+      if (savedCount) {
+        const count = parseInt(savedCount);
+        if (count >= 2 && count <= 5) {
+          setMaxSubQuestions(count);
+        }
+      }
+    }
+  }, [isAdmin, setMaxSubQuestions]);
+
   const handleSubQuestionCountChange = (value: string) => {
-    setMaxSubQuestions?.(parseInt(value));
+    const count = parseInt(value);
+    setMaxSubQuestions?.(count);
+    // Save to cookie
+    Cookies.set(MAX_SUB_QUESTIONS_COOKIE, value, { expires: COOKIE_EXPIRY_DAYS });
   };
 
   // When in the modal, we use a simple switch instead of the custom toggle

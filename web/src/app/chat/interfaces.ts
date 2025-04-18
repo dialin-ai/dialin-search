@@ -386,3 +386,9 @@ export const constructSubQuestions = (
 
   return updatedSubQuestions;
 };
+
+export interface RegenerationRequest {
+  messageId: number;
+  parentMessage: Message;
+  forceSearch?: boolean;
+}

@@ -35,14 +35,13 @@ import { getFormattedDateRangeString } from "@/lib/dateUtils";
 import { truncateString } from "@/lib/utils";
 import { buildImgUrl } from "../files/images/utils";
 import { useUser } from "@/components/user/UserProvider";
-import { AgenticToggle } from "./AgenticToggle";
 import { SettingsContext } from "@/components/settings/SettingsProvider";
-import { getProviderIcon } from "@/app/admin/configuration/llm/interfaces";
 import { useDocumentsContext } from "../my-documents/DocumentsContext";
 import { ChatSettingsModal } from "./ChatSettingsModal";
 import { Settings } from "lucide-react";
 import { IconProps } from "@/components/icons/icons";
-import { RegenerationRequest } from "@/lib/search/interfaces";
+import { RegenerationRequest } from "@/app/chat/interfaces";
+
 const MAX_INPUT_HEIGHT = 200;
 
 // Create a wrapper for the Settings icon that matches the expected interface
