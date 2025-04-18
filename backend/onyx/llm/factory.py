@@ -12,6 +12,7 @@ from onyx.db.llm import fetch_existing_llm_providers
 from onyx.db.llm import fetch_llm_provider_view
 from onyx.db.models import Persona
 from onyx.llm.chat_llm import DefaultMultiLLM
+from onyx.llm.chat_llm import TogetherLLM
 from onyx.llm.exceptions import GenAIDisabledException
 from onyx.llm.interfaces import LLM
 from onyx.llm.override_models import LLMOverride
@@ -260,6 +261,20 @@ def get_llm(
 ) -> LLM:
     if temperature is None:
         temperature = GEN_AI_TEMPERATURE
+        
+    if provider == "togetherai":
+        return TogetherLLM(
+            model_provider=provider,
+            model_name=model,
+            deployment_name=deployment_name,
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            timeout=timeout,
+            temperature=temperature,
+            custom_config=custom_config,
+        )
+    
     return DefaultMultiLLM(
         model_provider=provider,
         model_name=model,
