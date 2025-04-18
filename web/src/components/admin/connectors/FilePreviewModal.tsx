@@ -100,24 +100,15 @@ export function FilePreviewModal({
 
   // Fetch indexed content
   const fetchIndexedContent = async () => {
-    if (mockIndexedContent) {
-      setIndexedContent(mockIndexedContent);
-      setIndexedContentLoading(false);
-      return;
-    }
-
     try {
       setIndexedContentLoading(true);
       
-      // Use either provided document ID or derive it from file path
-      const docId = documentId || (filePath ? getDocumentIdFromPath(filePath) : "");
-      
-      if (!docId) {
+      if (!documentId) {
         throw new Error("No document ID available for indexed content");
       }
       
       // Call our new API endpoint
-      const response = await fetch(`/api/document/indexed-content?document_id=${encodeURIComponent(docId)}`, {
+      const response = await fetch(`/api/document/indexed-content?document_id=${encodeURIComponent(documentId)}`, {
         method: "GET",
       });
       
@@ -142,8 +133,7 @@ export function FilePreviewModal({
       
       // Fetch both original and indexed content
       Promise.all([
-        fetchOriginalContent(),
-        fetchIndexedContent()
+        fetchOriginalContent()
       ]).finally(() => {
         setIsLoading(false);
       });
@@ -160,88 +150,6 @@ export function FilePreviewModal({
       link.click();
       document.body.removeChild(link);
     }
-  };
-
-  // Generate example content for use when real data isn't available
-  const generateMockContent = (fileName: string, isOriginal: boolean): string => {
-    const baseName = fileName.split('.')[0];
-    
-    if (isCode) {
-      return isOriginal 
-        ? `// ${baseName}.${fileExt}
-import React from 'react';
-import { Button } from './components/Button';
-
-/**
- * Example component
- */
-function ${baseName.charAt(0).toUpperCase() + baseName.slice(1)}() {
-  const [count, setCount] = React.useState(0);
-  
-  return (
-    <div className="container">
-      <h1>Counter: {count}</h1>
-      <Button onClick={() => setCount(count + 1)}>
-        Increment
-      </Button>
-    </div>
-  );
-}
-
-export default ${baseName.charAt(0).toUpperCase() + baseName.slice(1)};`
-        : `This document contains:
-- A React component named ${baseName.charAt(0).toUpperCase() + baseName.slice(1)}
-- State management for a counter
-- A Button component
-- An increment function
-
-This appears to be a simple counter application interface with increment functionality.`;
-    }
-    
-    if (isTextFile) {
-      return isOriginal
-        ? `# ${baseName}
-
-## Introduction
-This is a sample document that demonstrates the capabilities of our system.
-
-## Features
-- Feature 1: Description of feature 1
-- Feature 2: Description of feature 2
-- Feature 3: Description of feature 3
-
-## Conclusion
-Thank you for using our product.`
-        : `This document contains:
-- A title: ${baseName}
-- An introduction section
-- A features section with 3 main features
-- A conclusion
-
-The document appears to be a product documentation explaining features of a system.`;
-    }
-    
-    if (isSpreadsheet) {
-      return isOriginal
-        ? `ID,Name,Department,Salary
-1,John Doe,Engineering,120000
-2,Jane Smith,Marketing,95000
-3,Robert Johnson,Sales,110000
-4,Sarah Williams,HR,85000
-5,Michael Brown,Engineering,125000`
-        : `This spreadsheet contains employee data with the following columns:
-- ID
-- Name
-- Department
-- Salary
-
-The data shows 5 employees across Engineering, Marketing, Sales, and HR departments with salaries ranging from $85,000 to $125,000.`;
-    }
-    
-    // Default content for other file types
-    return isOriginal
-      ? `This is the original content for ${fileName}.\n\nExample data for demonstration purposes.`
-      : `This is the indexed content extracted from ${fileName}.\n\nThe system has processed this document and extracted relevant information for search and retrieval.`;
   };
 
   // Render file content based on file type
