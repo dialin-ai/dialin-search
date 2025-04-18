@@ -646,6 +646,7 @@ def stream_chat_message_objects(
     # messages.
     # NOTE: is not stored in the database at all.
     single_message_history: str | None = None,
+    max_sub_questions: int | None = None,
 ) -> ChatPacketStream:
     """Streams in order:
     1. [conditional] Retrieved documents if a search needs to be run
@@ -1235,6 +1236,7 @@ def stream_chat_message_objects(
                 if retrieval_options
                 else None
             ),
+            max_sub_questions=max_sub_questions,
         )
 
         prompt_builder = AnswerPromptBuilder(
@@ -1513,6 +1515,7 @@ def stream_chat_message(
             litellm_additional_headers=litellm_additional_headers,
             custom_tool_additional_headers=custom_tool_additional_headers,
             is_connected=is_connected,
+            max_sub_questions=new_msg_req.max_sub_questions,
         )
         for obj in objects:
             # Check if this is a QADocsResponse with document results

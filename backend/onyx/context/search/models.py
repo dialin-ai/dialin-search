@@ -167,6 +167,9 @@ class SearchRequest(ChunkContext):
     precomputed_query_embedding: Embedding | None = None
     precomputed_is_keyword: bool | None = None
     precomputed_keywords: list[str] | None = None
+    
+    # The maximum number of sub-questions to generate in agent search
+    max_sub_questions: int | None = None
 
 
 class SearchQuery(ChunkContext):

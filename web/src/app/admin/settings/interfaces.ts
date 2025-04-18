@@ -22,6 +22,7 @@ export interface Settings {
   auto_scroll: boolean;
   temperature_override_enabled: boolean;
   query_history_type: QueryHistoryType;
+  max_sub_questions?: number;
 
   // Image processing settings
   image_extraction_and_analysis_enabled?: boolean;

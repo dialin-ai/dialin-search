@@ -2,8 +2,7 @@ from enum import Enum
 
 import litellm  # type: ignore
 from pydantic import BaseModel
-
-
+import together
 class CustomConfigKeyType(Enum):
     # used for configuration values that require manual input
     # i.e., textual API keys (e.g., "abcd1234")
@@ -38,6 +37,7 @@ class WellKnownLLMProviderDescriptor(BaseModel):
     # set for providers like Azure, which support a single model per deployment.
     single_model_supported: bool = False
 
+TOGETHERAI_PROVIDER_NAME = "togetherai"
 
 OPENAI_PROVIDER_NAME = "openai"
 OPEN_AI_MODEL_NAMES = [
@@ -120,11 +120,22 @@ VERTEXAI_MODEL_NAMES = [
     "gemini-1.5-flash-002",
 ]
 
+TOGETHERAI_MODEL_NAMES = [
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    "Qwen/QwQ-32B",
+    "deepseek-ai/DeepSeek-R1",
+    "deepseek-ai/DeepSeek-V3",
+    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "mistralai/Mistral-Small-24B-Instruct-2501",
+]   
 
 _PROVIDER_TO_MODELS_MAP = {
     OPENAI_PROVIDER_NAME: OPEN_AI_MODEL_NAMES,
     BEDROCK_PROVIDER_NAME: BEDROCK_MODEL_NAMES,
     ANTHROPIC_PROVIDER_NAME: ANTHROPIC_MODEL_NAMES,
+    TOGETHERAI_PROVIDER_NAME: TOGETHERAI_MODEL_NAMES,
     VERTEXAI_PROVIDER_NAME: VERTEXAI_MODEL_NAMES,
 }
 
@@ -216,8 +227,18 @@ def fetch_available_well_known_llms() -> list[WellKnownLLMProviderDescriptor]:
             default_model=VERTEXAI_DEFAULT_MODEL,
             default_fast_model=VERTEXAI_DEFAULT_MODEL,
         ),
+         WellKnownLLMProviderDescriptor(
+            name=TOGETHERAI_PROVIDER_NAME,
+            display_name="Together AI",
+            api_key_required=True,
+            api_base_required=False,
+            api_version_required=False,
+            custom_config_keys=[],
+            llm_names=fetch_models_for_provider(TOGETHERAI_PROVIDER_NAME),
+            default_model="Qwen/QwQ-32B",
+            default_fast_model="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        ),
     ]
-
 
 def fetch_models_for_provider(provider_name: str) -> list[str]:
     return _PROVIDER_TO_MODELS_MAP.get(provider_name, [])

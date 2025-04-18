@@ -6,7 +6,7 @@ import { Persona } from "@/app/admin/assistants/interfaces";
 import LLMPopover from "./LLMPopover";
 import { InputPrompt } from "@/app/chat/interfaces";
 
-import { FilterManager, getDisplayNameForModel, LlmManager } from "@/lib/hooks";
+import { FilterManager, getDisplayNameForModel, LlmDescriptor, LlmManager } from "@/lib/hooks";
 import { useChatContext } from "@/components/context/ChatContext";
 import { ChatFileType, FileDescriptor } from "../interfaces";
 import {
@@ -35,12 +35,20 @@ import { getFormattedDateRangeString } from "@/lib/dateUtils";
 import { truncateString } from "@/lib/utils";
 import { buildImgUrl } from "../files/images/utils";
 import { useUser } from "@/components/user/UserProvider";
-import { AgenticToggle } from "./AgenticToggle";
 import { SettingsContext } from "@/components/settings/SettingsProvider";
-import { getProviderIcon } from "@/app/admin/configuration/llm/interfaces";
 import { useDocumentsContext } from "../my-documents/DocumentsContext";
+import { ChatSettingsModal } from "./ChatSettingsModal";
+import { Settings } from "lucide-react";
+import { IconProps } from "@/components/icons/icons";
+import { RegenerationRequest } from "@/app/chat/interfaces";
 
 const MAX_INPUT_HEIGHT = 200;
+
+// Create a wrapper for the Settings icon that matches the expected interface
+const SettingsIconWrapper = ({ size, className }: IconProps): JSX.Element => {
+  return <Settings size={size} className={className} />;
+};
+
 export const SourceChip2 = ({
   icon,
   title,
@@ -178,7 +186,29 @@ interface ChatInputBarProps {
   message: string;
   setMessage: (message: string) => void;
   stopGenerating: () => void;
-  onSubmit: () => void;
+  onSubmit: ({
+    maxSubQuestions,
+    messageIdToResend,
+    messageOverride,
+    queryOverride,
+    forceSearch,
+    isSeededChat,
+    alternativeAssistantOverride, 
+    modelOverride,
+    regenerationRequest,
+    overrideFileDescriptors,
+  }: {
+    maxSubQuestions?: number;
+    messageIdToResend?: number;
+    messageOverride?: string;
+    queryOverride?: string;
+    forceSearch?: boolean;
+    isSeededChat?: boolean;
+    alternativeAssistantOverride?: Persona | null;
+    modelOverride?: LlmDescriptor;
+    regenerationRequest?: RegenerationRequest | null;
+    overrideFileDescriptors?: FileDescriptor[];
+  }) => void;
   llmManager: LlmManager;
   chatState: ChatState;
   alternativeAssistant: Persona | null;
@@ -197,6 +227,15 @@ interface ChatInputBarProps {
   proSearchEnabled: boolean;
   setProSearchEnabled: (proSearchEnabled: boolean) => void;
 }
+
+// Define a simplified version of the useSuggestedPrompts hook
+const useSuggestedPrompts = (handleMessageSelection: (text: string) => void) => {
+  return {
+    suggestedPrompts: [],
+    suggestionLoaded: true,
+    handleMessageSelection: handleMessageSelection
+  };
+};
 
 export function ChatInputBar({
   toggleDocSelection,
@@ -238,6 +277,10 @@ export function ChatInputBar({
   } = useDocumentsContext();
 
   const settings = useContext(SettingsContext);
+  const [maxSubQuestions, setMaxSubQuestions] = useState<number | undefined>(settings?.settings.max_sub_questions);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const { llmProviders } = useChatContext();
+
   useEffect(() => {
     const textarea = textAreaRef.current;
     if (textarea) {
@@ -268,7 +311,7 @@ export function ChatInputBar({
 
   const { finalAssistants: assistantOptions } = useAssistants();
 
-  const { llmProviders, inputPrompts } = useChatContext();
+  const { inputPrompts } = useChatContext();
 
   const suggestionsRef = useRef<HTMLDivElement | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -420,6 +463,16 @@ export function ChatInputBar({
       setTabbingIconIndex((tabbingIconIndex) =>
         Math.max(tabbingIconIndex - 1, 0)
       );
+    }
+  };
+
+  const handleSubmit = () => {
+    if (message) {
+      if (proSearchEnabled && maxSubQuestions) {
+        onSubmit({ maxSubQuestions });
+      } else {
+        onSubmit({});
+      }
     }
   };
 
@@ -628,7 +681,7 @@ export function ChatInputBar({
                 ) {
                   event.preventDefault();
                   if (message) {
-                    onSubmit();
+                    handleSubmit();
                   }
                 }
               }}
@@ -781,7 +834,7 @@ export function ChatInputBar({
             )}
 
             <div className="flex pr-4 pb-2 justify-between bg-input-background items-center w-full ">
-              <div className="space-x-1 flex  px-4 ">
+              <div className="space-x-1 flex px-4">
                 <ChatInputOption
                   flexPriority="stiff"
                   name="File"
@@ -790,34 +843,6 @@ export function ChatInputBar({
                     toggleDocSelection();
                   }}
                   tooltipContent={"Upload files and attach user files"}
-                />
-
-                <LLMPopover
-                  llmProviders={llmProviders}
-                  llmManager={llmManager}
-                  requiresImageGeneration={false}
-                  currentAssistant={selectedAssistant}
-                  trigger={
-                    <button
-                      className="dark:text-white text-black focus:outline-none"
-                      data-testid="llm-popover-trigger"
-                    >
-                      <ChatInputOption
-                        minimize
-                        toggle
-                        flexPriority="stiff"
-                        name={getDisplayNameForModel(
-                          llmManager?.currentLlm.modelName || "Models"
-                        )}
-                        Icon={getProviderIcon(
-                          llmManager?.currentLlm.provider || "anthropic",
-                          llmManager?.currentLlm.modelName ||
-                            "claude-3-5-sonnet-20240620"
-                        )}
-                        tooltipContent="Switch models"
-                      />
-                    </button>
-                  }
                 />
 
                 {retrievalEnabled && (
@@ -842,14 +867,17 @@ export function ChatInputBar({
                     }
                   />
                 )}
+
+                <ChatInputOption
+                  flexPriority="stiff"
+                  name="Settings"
+                  Icon={SettingsIconWrapper}
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  tooltipContent="Chat settings"
+                  size={16}
+                />
               </div>
               <div className="flex items-center my-auto">
-                {retrievalEnabled && settings?.settings.pro_search_enabled && (
-                  <AgenticToggle
-                    proSearchEnabled={proSearchEnabled}
-                    setProSearchEnabled={setProSearchEnabled}
-                  />
-                )}
                 <button
                   id="onyx-chat-input-send-button"
                   className={`cursor-pointer ${
@@ -865,7 +893,7 @@ export function ChatInputBar({
                     if (chatState == "streaming") {
                       stopGenerating();
                     } else if (message) {
-                      onSubmit();
+                      handleSubmit();
                     }
                   }}
                 >
@@ -892,6 +920,17 @@ export function ChatInputBar({
           </div>
         </div>
       </div>
+
+      <ChatSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        proSearchEnabled={proSearchEnabled}
+        setProSearchEnabled={setProSearchEnabled}
+        maxSubQuestions={maxSubQuestions}
+        setMaxSubQuestions={setMaxSubQuestions}
+        llmManager={llmManager}
+        llmProviders={llmProviders}
+      />
     </div>
   );
 }

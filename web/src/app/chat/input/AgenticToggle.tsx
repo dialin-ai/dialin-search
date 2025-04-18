@@ -1,14 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Cookies from "js-cookie";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUser } from "@/components/user/UserProvider";
+import { SettingsContext } from "@/components/settings/SettingsProvider";
+import { useContext } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { MAX_SUB_QUESTIONS_COOKIE, COOKIE_EXPIRY_DAYS } from "./constants";
 
 interface AgenticToggleProps {
   proSearchEnabled: boolean;
   setProSearchEnabled: (enabled: boolean) => void;
+  maxSubQuestions?: number;
+  setMaxSubQuestions?: (count: number) => void;
+  inModal?: boolean;
 }
 
 const ProSearchIcon = () => (
@@ -39,49 +49,108 @@ const ProSearchIcon = () => (
 export function AgenticToggle({
   proSearchEnabled,
   setProSearchEnabled,
+  maxSubQuestions,
+  setMaxSubQuestions,
+  inModal = false,
 }: AgenticToggleProps) {
   const handleToggle = () => {
     setProSearchEnabled(!proSearchEnabled);
   };
+  
+  const { isAdmin } = useUser();
+  const settings = useContext(SettingsContext);
+  
+  // Load the maxSubQuestions from cookie on mount
+  useEffect(() => {
+    if (isAdmin && setMaxSubQuestions) {
+      const savedCount = Cookies.get(MAX_SUB_QUESTIONS_COOKIE);
+      if (savedCount) {
+        const count = parseInt(savedCount);
+        if (count >= 2 && count <= 5) {
+          setMaxSubQuestions(count);
+        }
+      }
+    }
+  }, [isAdmin, setMaxSubQuestions]);
 
+  const handleSubQuestionCountChange = (value: string) => {
+    const count = parseInt(value);
+    setMaxSubQuestions?.(count);
+    // Save to cookie
+    Cookies.set(MAX_SUB_QUESTIONS_COOKIE, value, { expires: COOKIE_EXPIRY_DAYS });
+  };
+
+  // When in the modal, we use a simple switch instead of the custom toggle
+  if (inModal) {
+    return (
+      <Switch
+        checked={proSearchEnabled}
+        onCheckedChange={handleToggle}
+      />
+    );
+  }
+
+  // Original toggle UI for the chat input bar
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
-            className={`ml-auto py-1.5
-            rounded-lg
-            group
-            px-2  inline-flex items-center`}
-            onClick={handleToggle}
-            role="switch"
-            aria-checked={proSearchEnabled}
-          >
-            <div
-              className={`
-                ${
-                  proSearchEnabled
-                    ? "border-background-200 group-hover:border-[#000] dark:group-hover:border-neutral-300"
-                    : "border-background-200 group-hover:border-[#000] dark:group-hover:border-neutral-300"
-                }
-                 relative inline-flex h-[16px] w-8 items-center rounded-full transition-colors focus:outline-none border animate transition-all duration-200 border-background-200 group-hover:border-[1px]  `}
+          <div className="flex items-center gap-3">
+            <button
+              className={`ml-auto py-1.5
+              rounded-lg
+              group
+              px-2 inline-flex items-center`}
+              onClick={handleToggle}
+              role="switch"
+              aria-checked={proSearchEnabled}
             >
+              <div
+                className={`
+                  ${
+                    proSearchEnabled
+                      ? "border-background-200 group-hover:border-[#000] dark:group-hover:border-neutral-300"
+                      : "border-background-200 group-hover:border-[#000] dark:group-hover:border-neutral-300"
+                  }
+                   relative inline-flex h-[16px] w-8 items-center rounded-full transition-colors focus:outline-none border animate transition-all duration-200 border-background-200 group-hover:border-[1px]  `}
+              >
+                <span
+                  className={`${
+                    proSearchEnabled
+                      ? "bg-agent translate-x-4 scale-75"
+                      : "bg-background-600 group-hover:bg-background-950 translate-x-0.5 scale-75"
+                  }  inline-block h-[12px] w-[12px]  group-hover:scale-90 transform rounded-full transition-transform duration-200 ease-in-out`}
+                />
+              </div>
               <span
-                className={`${
-                  proSearchEnabled
-                    ? "bg-agent translate-x-4 scale-75"
-                    : "bg-background-600 group-hover:bg-background-950 translate-x-0.5 scale-75"
-                }  inline-block h-[12px] w-[12px]  group-hover:scale-90 transform rounded-full transition-transform duration-200 ease-in-out`}
-              />
-            </div>
-            <span
-              className={`ml-2 text-sm font-[550] flex items-center ${
-                proSearchEnabled ? "text-agent" : "text-text-dark"
-              }`}
-            >
-              Agent
-            </span>
-          </button>
+                className={`ml-2 text-sm font-[550] flex items-center ${
+                  proSearchEnabled ? "text-agent" : "text-text-dark"
+                }`}
+              >
+                Agent
+              </span>
+            </button>
+            
+            {isAdmin && proSearchEnabled && setMaxSubQuestions && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-light">Subquestions:</span>
+                <Select 
+                  value={maxSubQuestions?.toString() || (settings?.settings.max_sub_questions || "3").toString()} 
+                  onValueChange={handleSubQuestionCountChange}
+                >
+                  <SelectTrigger className="h-7 w-14 px-2 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </TooltipTrigger>
         <TooltipContent
           side="top"
@@ -102,6 +171,7 @@ export function AgenticToggle({
             <li>Improved accuracy of search results</li>
             <li>Less hallucinations</li>
             <li>More comprehensive answers</li>
+            {isAdmin && <li>Admins can set the maximum number of subquestions (2-5)</li>}
           </ul>
         </TooltipContent>
       </Tooltip>

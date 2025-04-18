@@ -182,6 +182,7 @@ export async function* sendMessage({
   signal,
   forceUserFileSearch,
   useLanggraph,
+  maxSubQuestions,
 }: {
   regenerate: boolean;
   message: string;
@@ -204,6 +205,7 @@ export async function* sendMessage({
   userFolderIds?: number[];
   forceUserFileSearch?: boolean;
   useLanggraph?: boolean;
+  maxSubQuestions?: number;
 }): AsyncGenerator<PacketType, void, unknown> {
   const documentsAreSelected =
     selectedDocumentIds && selectedDocumentIds.length > 0;
@@ -248,6 +250,7 @@ export async function* sendMessage({
         : null,
     use_existing_user_message: useExistingUserMessage,
     use_agentic_search: useLanggraph ?? false,
+    max_sub_questions: maxSubQuestions ?? 3,
   });
 
   const response = await fetch(`/api/chat/send-message`, {

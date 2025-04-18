@@ -1171,6 +1171,7 @@ export function ChatPage({
   }, [autoScrollEnabled, screenHeight, currentSessionHasSentLocalUserMessage]);
 
   const onSubmit = async ({
+    maxSubQuestions,
     messageIdToResend,
     messageOverride,
     queryOverride,
@@ -1181,6 +1182,7 @@ export function ChatPage({
     regenerationRequest,
     overrideFileDescriptors,
   }: {
+    maxSubQuestions?: number;
     messageIdToResend?: number;
     messageOverride?: string;
     queryOverride?: string;
@@ -1412,6 +1414,7 @@ export function ChatPage({
           settings?.settings.pro_search_enabled &&
           proSearchEnabled &&
           retrievalEnabled,
+        maxSubQuestions: maxSubQuestions ?? 3,
       });
 
       const delay = (ms: number) => {

@@ -145,6 +145,8 @@ class CreateChatMessageRequest(ChunkContext):
 
     skip_gen_ai_answer_generation: bool = False
 
+    max_sub_questions: int | None = None
+
     @model_validator(mode="after")
     def check_search_doc_ids_or_retrieval_options(self) -> "CreateChatMessageRequest":
         if self.search_doc_ids is None and self.retrieval_options is None:

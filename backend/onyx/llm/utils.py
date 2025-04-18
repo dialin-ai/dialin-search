@@ -381,6 +381,70 @@ def test_llm(llm: LLM) -> str | None:
 def get_model_map() -> dict:
     starting_map = copy.deepcopy(cast(dict, litellm.model_cost))
 
+    # Add Together AI model prices and token limits
+    together_ai_models = {
+        "meta-llama/Llama-4-Scout-17B-16E-Instruct": {
+            "max_tokens": 1000000,
+            "max_input_tokens": 1000000,
+            "max_output_tokens": 1000000,
+            "input_cost_per_token": 0.00000018,
+            "output_cost_per_token": 0.00000059
+        },
+        "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": {
+            "max_tokens": 1000000,
+            "max_input_tokens": 1000000,
+            "max_output_tokens": 1000000,
+            "input_cost_per_token": 0.00000027,
+            "output_cost_per_token": 0.00000085
+        },
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo": {
+            "max_tokens": 128000,
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.00000088,
+            "output_cost_per_token": 0.00000088
+        },
+        "deepseek-ai/DeepSeek-R1": {
+            "max_tokens": 164000,
+            "max_input_tokens": 164000,
+            "max_output_tokens": 164000,
+            "input_cost_per_token": 0.000003,
+            "output_cost_per_token": 0.000007
+        },
+        "deepseek-ai/DeepSeek-V3": {
+            "max_tokens": 131000,
+            "max_input_tokens": 131000,
+            "max_output_tokens": 131000,
+            "input_cost_per_token": 0.00000125,
+            "output_cost_per_token": 0.00000125
+        },
+        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B": {
+            "max_tokens": 128000,
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.000002,
+            "output_cost_per_token": 0.000002
+        },
+        "mistralai/Mistral-Small-24B-Instruct-2501": {
+            "max_tokens": 32768,
+            "max_input_tokens": 32768,
+            "max_output_tokens": 32768,
+            "input_cost_per_token": 0.0000008,
+            "output_cost_per_token": 0.0000008,
+        },
+        "Qwen/QwQ-32B": {
+            "max_tokens": 131072,
+            "max_input_tokens": 131072,
+            "max_output_tokens": 131072,
+            "input_cost_per_token": 0.0000012,
+            "output_cost_per_token": 0.0000012,
+        },
+    }
+
+    # Add Together AI models to the starting map
+    for model_name, model_config in together_ai_models.items():
+        starting_map[f"togetherai/{model_name}"] = model_config
+
     # NOTE: we could add additional models here in the future,
     # but for now there is no point. Ollama allows the user to
     # to specify their desired max context window, and it's
