@@ -278,6 +278,10 @@ class TogetherLLM(LLM):
                 api_key=self._api_key,
                 base_url=self._api_base,
             )
+            if extra_headers:
+                model_kwargs.update({"extra_headers": extra_headers})
+            if extra_body:
+                model_kwargs.update({"extra_body": extra_body})
             self._model_kwargs = model_kwargs
             self._max_output_tokens = max_output_tokens
 

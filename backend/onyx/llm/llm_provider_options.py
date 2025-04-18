@@ -120,11 +120,22 @@ VERTEXAI_MODEL_NAMES = [
     "gemini-1.5-flash-002",
 ]
 
+TOGETHERAI_MODEL_NAMES = [
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    "Qwen/QwQ-32B",
+    "deepseek-ai/DeepSeek-R1",
+    "deepseek-ai/DeepSeek-V3",
+    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "mistralai/Mistral-Small-24B-Instruct-2501",
+]   
 
 _PROVIDER_TO_MODELS_MAP = {
     OPENAI_PROVIDER_NAME: OPEN_AI_MODEL_NAMES,
     BEDROCK_PROVIDER_NAME: BEDROCK_MODEL_NAMES,
     ANTHROPIC_PROVIDER_NAME: ANTHROPIC_MODEL_NAMES,
+    TOGETHERAI_PROVIDER_NAME: TOGETHERAI_MODEL_NAMES,
     VERTEXAI_PROVIDER_NAME: VERTEXAI_MODEL_NAMES,
 }
 
@@ -225,11 +236,9 @@ def fetch_available_well_known_llms() -> list[WellKnownLLMProviderDescriptor]:
             custom_config_keys=[],
             llm_names=fetch_models_for_provider(TOGETHERAI_PROVIDER_NAME),
             default_model="Qwen/QwQ-32B",
-            default_fast_model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+            default_fast_model="meta-llama/Llama-3.3-70B-Instruct-Turbo",
         ),
     ]
 
 def fetch_models_for_provider(provider_name: str) -> list[str]:
-    if provider_name == "togetherai":
-        return [model.get('id') for model in together.Models.list()]
     return _PROVIDER_TO_MODELS_MAP.get(provider_name, [])
