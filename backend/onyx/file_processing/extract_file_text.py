@@ -22,9 +22,9 @@ import openpyxl  # type: ignore
 import pptx  # type: ignore
 from docx import Document as DocxDocument
 from fastapi import UploadFile
-from PIL import Image
 from pypdf import PdfReader
 from pypdf.errors import PdfStreamError
+from .pdf.advanced_pdf_reader import AdvancedPDFReader
 
 from onyx.configs.constants import DANSWER_METADATA_FILENAME
 from onyx.configs.constants import FileOrigin
@@ -264,50 +264,44 @@ def read_pdf_file(
     """
     metadata: dict[str, Any] = {}
     extracted_images: list[tuple[bytes, str]] = []
+    
     try:
-        pdf_reader = PdfReader(file)
-
-        if pdf_reader.is_encrypted and pdf_pass is not None:
-            decrypt_success = False
-            try:
-                decrypt_success = pdf_reader.decrypt(pdf_pass) != 0
-            except Exception:
-                logger.error("Unable to decrypt pdf")
-
-            if not decrypt_success:
-                return "", metadata, []
-        elif pdf_reader.is_encrypted:
-            logger.warning("No Password for an encrypted PDF, returning empty text.")
-            return "", metadata, []
-
-        # Basic PDF metadata
-        if pdf_reader.metadata is not None:
-            for key, value in pdf_reader.metadata.items():
-                clean_key = key.lstrip("/")
-                if isinstance(value, str) and value.strip():
-                    metadata[clean_key] = value
-                elif isinstance(value, list) and all(
-                    isinstance(item, str) for item in value
-                ):
-                    metadata[clean_key] = ", ".join(value)
-
-        text = TEXT_SECTION_SEPARATOR.join(
-            page.extract_text() for page in pdf_reader.pages
-        )
-
+        # Create a temporary file to handle IO object
+        if not hasattr(file, 'name'):
+            temp_file = io.BytesIO(file.read())
+            temp_file.name = 'temp.pdf'
+            file = temp_file
+            
+        pdf_reader = AdvancedPDFReader(file, pdf_pass=pdf_pass)
+        
+        # Get metadata using AdvancedPDFReader's method
+        metadata = pdf_reader.get_metadata()
+        
+        # Process all pages
+        results = pdf_reader.process_pdf()
+        pages = []
+        
+        for result in results:
+            # Use merged text if available (from both native and OCR)
+            if result.get("merged_text"):
+                pages.append(result["merged_text"])
+            # Fallback to native text
+            elif result["native_text"]:
+                pages.append(result["native_text"])
+            # Last resort: OCR text
+            elif result["ocr_text"]:
+                pages.append(result["ocr_text"])
+            # If no text was extracted, append empty string to maintain page count
+            else:
+                pages.append("")
+                logger.warning(f"No text extracted from page {result['page_number'] + 1}")
+        
+        text = TEXT_SECTION_SEPARATOR.join(pages)
+        
         if extract_images:
-            for page_num, page in enumerate(pdf_reader.pages):
-                for image_file_object in page.images:
-                    image = Image.open(io.BytesIO(image_file_object.data))
-                    img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format=image.format)
-                    img_bytes = img_byte_arr.getvalue()
-
-                    image_name = (
-                        f"page_{page_num + 1}_image_{image_file_object.name}."
-                        f"{image.format.lower() if image.format else 'png'}"
-                    )
-                    extracted_images.append((img_bytes, image_name))
+            extracted_images = pdf_reader.extract_images()
+    
+        logger.info(f"Extracted file text for {file.name}: {text}")
 
         return text, metadata, extracted_images
 
@@ -315,8 +309,8 @@ def read_pdf_file(
         logger.exception("Invalid PDF file")
     except Exception:
         logger.exception("Failed to read PDF")
-
-    return "", metadata, []
+    
+    return "", metadata, extracted_images
 
 
 def docx_to_text_and_images(
@@ -515,6 +509,7 @@ def extract_text_and_images(
             text_content, pdf_metadata, images = read_pdf_file(
                 file, pdf_pass, extract_images=True
             )
+            logger.info(f"Extracted PDFtext: {text_content}")
             return ExtractionResult(
                 text_content=text_content, embedded_images=images, metadata=pdf_metadata
             )
